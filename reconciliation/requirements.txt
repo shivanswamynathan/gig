@@ -1,0 +1,19 @@
+# Core Django (if not already installed)
+Django>=4.2.0
+
+# PDF Processing
+PyMuPDF==1.23.8
+
+# LangChain and Google AI
+langchain
+langchain-google-genai
+
+# Google AI dependencies
+google-generativeai>=0.3.0
+
+# Additional dependencies that might be needed
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Optional: For better logging and debugging
+colorlog>=6.7.0
