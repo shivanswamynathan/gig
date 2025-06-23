@@ -1,0 +1,145 @@
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\reconciliation\settings.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /document-processing/api/process-invoice-simple/
+Not Found: /document-processing/api/process-invoice-simple/
+D:\Entrans\Ginthi\reconciliation\reconciliation\urls.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Extracting text from uploaded file: 1742816091007&&YVzyrMP8-5300 CURE.pdf
+Processing invoice data with LLM...
+Successfully processed invoice: 1742816091007&&YVzyrMP8-5300 CURE.pdf
+Watching for file changes with StatReloader
+Extracting text from uploaded file: 1742816091007&&YVzyrMP8-5300 CURE.pdf
+Processing invoice data with LLM...
+Successfully processed invoice: 1742816091007&&YVzyrMP8-5300 CURE.pdf
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Processing invoice data with LLM...
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Watching for file changes with StatReloader
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Processing invoice data with LLM...
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\document_processing\views.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\document_processing\views.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\document_processing\views.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Processing invoice file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Processing invoice data with LLM...
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Watching for file changes with StatReloader
+Processing PO/GRN file: PO-GRN Docs Report.xlsx
+Reading excel file: PO-GRN Docs Report.xlsx
+Error reading file C:\Users\USER~1.ET-\AppData\Local\Temp\tmpz1z6d0g_.xlsx: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+Error processing uploaded file PO-GRN Docs Report.xlsx: Failed to read file: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+Error processing PO/GRN file: Failed to process file: Failed to read file: Missing optional dependency 'openpyxl'.  Use pip or conda to install openpyxl.
+Internal Server Error: /document-processing/api/process-po-grn/
+Watching for file changes with StatReloader
+Processing PO/GRN file: PO-GRN Docs Report.xlsx
+Reading excel file: PO-GRN Docs Report.xlsx
+Could not determine data type for file: PO-GRN Docs Report.xlsx
+Successfully processed file: PO-GRN Docs Report.xlsx
+D:\Entrans\Ginthi\reconciliation\document_processing\processors\data_ingestion\po_grn_extractor.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\document_processing\processors\data_ingestion\po_grn_extractor.py changed, reloading.
+Watching for file changes with StatReloader
+Processing PO/GRN file: PO-GRN Docs Report.xlsx
+Reading excel file: PO-GRN Docs Report.xlsx
+Could not determine data type for file: PO-GRN Docs Report.xlsx
+Successfully processed file: PO-GRN Docs Report.xlsx
+Watching for file changes with StatReloader
+Processing PO/GRN file: PO-GRN Docs Report.xlsx
+Reading excel file: PO-GRN Docs Report.xlsx
+Found headers at row 6
+Processing as Combined PO-GRN data
+Successfully processed file: PO-GRN Docs Report.xlsx
+Watching for file changes with StatReloader
+Processing PO/GRN file: Book1.xlsx
+Reading excel file: Book1.xlsx
+Found headers at row 1
+Processing as Combined PO-GRN data
+Successfully processed file: Book1.xlsx
+Watching for file changes with StatReloader
+Processing invoice file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Input tokens: 2213
+Processing invoice data with LLM...
+Output tokens: 1805, Total tokens: 4018
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Token usage - Input: 2213, Output: 1805, Total: 4018
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Bad Request: /document-processing/api/process-invoice/
+Processing invoice file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Input tokens: 2220
+Processing invoice data with LLM...
+Output tokens: 1379, Total tokens: 3599
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Token usage - Input: 2220, Output: 1379, Total: 3599
+Watching for file changes with StatReloader
+Processing invoice file: 1745933698799&&JkqFzar0-Invoice7.pdf
+Extracting text from uploaded file: 1745933698799&&JkqFzar0-Invoice7.pdf
+Input tokens: 758
+Processing invoice data with LLM...
+Output tokens: 370, Total tokens: 1128
+Extracted PAN AAJCC0315J from GST number
+Successfully processed invoice: 1745933698799&&JkqFzar0-Invoice7.pdf
+Token usage - Input: 758, Output: 370, Total: 1128
+D:\Entrans\Ginthi\reconciliation\document_processing\processors\invoice_processors\invoice_pdf_processor.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\document_processing\processors\invoice_processors\invoice_pdf_processor.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Entrans\Ginthi\reconciliation\document_processing\processors\invoice_processors\invoice_pdf_processor.py changed, reloading.
+Watching for file changes with StatReloader
+Processing invoice file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Input tokens: 2286
+Processing invoice data with LLM...
+Output tokens: 1367, Total tokens: 3653
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Token usage - Input: 2286, Output: 1367, Total: 3653
+D:\Entrans\Ginthi\reconciliation\document_processing\processors\invoice_processors\invoice_pdf_processor.py changed, reloading.
+Watching for file changes with StatReloader
+Processing invoice file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Extracting text from uploaded file: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Input tokens: 2314
+Processing invoice data with LLM...
+Output tokens: 1387, Total tokens: 3701
+Successfully processed invoice: 1748598217159&&0jpFTJiq-invoice-ZHPTN26-OR-0016508948.pdf
+Token usage - Input: 2314, Output: 1387, Total: 3701
+Watching for file changes with StatReloader
+Processing PO/GRN file: Book1.xlsx
+Reading excel file: Book1.xlsx
+Found headers at row 1
+Processing as Combined PO-GRN data
+Successfully processed file: Book1.xlsx
+Watching for file changes with StatReloader
+Bad Request: /document-processing/api/process-po-grn/
+Watching for file changes with StatReloader
+Processing PO/GRN file: PO-GRN Docs Report.xlsx
+Reading excel file: PO-GRN Docs Report.xlsx
+Found headers at row 6
+Processing as Combined PO-GRN data
+Successfully processed file: PO-GRN Docs Report.xlsx
+Watching for file changes with StatReloader
+Processing PO/GRN file: PO-GRN Docs Report.xlsx
+Reading excel file: PO-GRN Docs Report.xlsx
+Found headers at row 6
+Processing as Combined PO-GRN data
+Successfully processed file: PO-GRN Docs Report.xlsx
+Processing PO/GRN file: Book1.xlsx
+Reading excel file: Book1.xlsx
+Found headers at row 1
+Processing as Combined PO-GRN data
+Successfully processed file: Book1.xlsx
