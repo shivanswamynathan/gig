@@ -188,6 +188,7 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT'),
+        'CONN_MAX_AGE': 600,
     }
 }
 
@@ -297,6 +298,12 @@ LOGGING = {
             'filename': 'database_operations.log',
             'formatter': 'verbose',
         },
+        'itemwise_grn_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'itemwise_grn_processing.log',
+            'formatter': 'verbose',
+        },
     },
     'root': {
         'handlers': ['console', 'file'],
@@ -304,7 +311,7 @@ LOGGING = {
     },
     'loggers': {
         'document_processing': {
-            'handlers': ['file', 'console', 'db_file'],
+            'handlers': ['file', 'console', 'db_file','itemwise_grn_file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -315,3 +322,11 @@ LOGGING = {
         },
     },
 }
+
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+
+# Additional settings for large file processing
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  
