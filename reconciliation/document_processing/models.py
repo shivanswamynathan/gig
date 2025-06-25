@@ -882,11 +882,6 @@ class InvoiceData(models.Model):
     """Model to store extracted invoice data from attachments"""
     
     # === SOURCE REFERENCE ===
-    source_grn_id = models.ForeignKey(
-        ItemWiseGrn, 
-        on_delete=models.CASCADE,
-        verbose_name="Source GRN Record"
-    )
     
     attachment_number = models.CharField(
         max_length=2,
@@ -982,24 +977,20 @@ class InvoiceData(models.Model):
         db_table = 'invoice_data'
         verbose_name = "Invoice Data"
         verbose_name_plural = "Invoice Data Records"
-        unique_together = ['source_grn_id', 'attachment_number']
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['source_grn_id']),
             models.Index(fields=['po_number']),
             models.Index(fields=['invoice_number']),
             models.Index(fields=['vendor_gst']),
             models.Index(fields=['processing_status']),
             models.Index(fields=['file_type']),
+            models.Index(fields=['attachment_url']),
         ]
     
     def __str__(self):
-        return f"Invoice {self.invoice_number or 'Unknown'} - GRN {self.source_grn_id.id}"
+        return f"Invoice {self.invoice_number or 'Unknown'} - PO {self.po_number or 'N/A'}"
     
     def save(self, *args, **kwargs):
-        # Auto-populate PO number from GRN
-        if not self.po_number and self.source_grn_id:
-            self.po_number = self.source_grn_id.po_no
         
         # Auto-extract PAN from GST if not set
         if self.vendor_gst and not self.vendor_pan and len(self.vendor_gst) >= 15:
