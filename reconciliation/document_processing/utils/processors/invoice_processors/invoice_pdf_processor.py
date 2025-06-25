@@ -44,7 +44,6 @@ class InvoicePDFProcessor:
             "vendor_gst": "",
             "invoice_date": "",
             "invoice_number": "",
-            "po_number": "",
             "items": [
                 {
                     "description": "",
@@ -148,12 +147,8 @@ EXTRACTION RULES:
 8. For GST details, extract CGST, SGST, IGST rates and amounts as provided in the invoice. If specific breakup is not available, use empty strings.
 9. Unit of measurement should be units like KG, PCS, NOS, LTR, etc.
 10. HSN codes should be extracted for each item - HSN codes can be 4, 6, or 8 digits. Extract the FULL HSN code as shown in the invoice.
-11. **IMPORTANT - PO vs Order Number**: 
-    - Extract PO number from "PO Number", "Reference PO", "PO No" fields ONLY
-    - Do NOT use "Order Number" or "Order No" as PO number
-    - If no explicit PO reference found, use empty string for po_number
-12. Be precise and accurate - double-check all extracted values
-13. Return ONLY the JSON object, no additional text
+11. Be precise and accurate - double-check all extracted values
+12. Return ONLY the JSON object, no additional text
 
 REQUIRED JSON STRUCTURE:
 {schema}
