@@ -876,3 +876,133 @@ class ItemWiseGrn(models.Model):
         if self.price is not None and self.net_quantity is not None:
             return self.price * self.net_quantity
         return None
+    
+
+class InvoiceData(models.Model):
+    """Model to store extracted invoice data from attachments"""
+    
+    # === SOURCE REFERENCE ===
+    source_grn_id = models.ForeignKey(
+        ItemWiseGrn, 
+        on_delete=models.CASCADE,
+        verbose_name="Source GRN Record"
+    )
+    
+    attachment_number = models.CharField(
+        max_length=2,
+        choices=[('1', 'Attachment 1'), ('2', 'Attachment 2'), 
+                ('3', 'Attachment 3'), ('4', 'Attachment 4'), ('5', 'Attachment 5')],
+        verbose_name="Attachment Number"
+    )
+    
+    attachment_url = models.URLField(
+        max_length=1000,
+        verbose_name="Original Attachment URL"
+    )
+    
+    # === FILE CLASSIFICATION ===
+    file_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('pdf_text', 'PDF - Text Based'),
+            ('pdf_image', 'PDF - Image Based'), 
+            ('image', 'Image File'),
+            ('unknown', 'Unknown/Failed'),
+        ],
+        verbose_name="File Processing Type"
+    )
+    
+    original_file_extension = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        verbose_name="Original File Extension",
+        help_text="Original file extension (.pdf, .jpg, .png, etc.)"
+    )
+    
+    # === INVOICE DATA ===
+    vendor_name = models.CharField(max_length=255, blank=True, null=True)
+    vendor_pan = models.CharField(max_length=10, blank=True, null=True)
+    vendor_gst = models.CharField(max_length=15, blank=True, null=True)
+    invoice_date = models.DateField(blank=True, null=True)
+    invoice_number = models.CharField(max_length=100, blank=True, null=True)
+    po_number = models.CharField(max_length=200, blank=True, null=True, db_index=True)
+    
+    # === FINANCIAL DATA ===
+    invoice_value_without_gst = models.DecimalField(
+        max_digits=15, decimal_places=2, blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    cgst_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    cgst_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    sgst_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    sgst_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    igst_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    igst_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    total_gst_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    invoice_total_post_gst = models.DecimalField(
+        max_digits=15, decimal_places=2, blank=True, null=True,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    
+    # === ITEMS (JSON) ===
+    items_data = models.JSONField(blank=True, null=True)
+    
+    # === PROCESSING METADATA ===
+    processing_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('processing', 'Processing'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed'),
+        ],
+        default='pending'
+    )
+    error_message = models.TextField(blank=True, null=True)
+    extracted_at = models.DateTimeField(blank=True, null=True)
+    
+    # === TIMESTAMPS ===
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'invoice_data'
+        verbose_name = "Invoice Data"
+        verbose_name_plural = "Invoice Data Records"
+        unique_together = ['source_grn_id', 'attachment_number']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['source_grn_id']),
+            models.Index(fields=['po_number']),
+            models.Index(fields=['invoice_number']),
+            models.Index(fields=['vendor_gst']),
+            models.Index(fields=['processing_status']),
+            models.Index(fields=['file_type']),
+        ]
+    
+    def __str__(self):
+        return f"Invoice {self.invoice_number or 'Unknown'} - GRN {self.source_grn_id.id}"
+    
+    def save(self, *args, **kwargs):
+        # Auto-populate PO number from GRN
+        if not self.po_number and self.source_grn_id:
+            self.po_number = self.source_grn_id.po_no
+        
+        # Auto-extract PAN from GST if not set
+        if self.vendor_gst and not self.vendor_pan and len(self.vendor_gst) >= 15:
+            self.vendor_pan = self.vendor_gst[2:12]
+        
+        super().save(*args, **kwargs)
