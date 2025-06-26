@@ -997,3 +997,192 @@ class InvoiceData(models.Model):
             self.vendor_pan = self.vendor_gst[2:12]
         
         super().save(*args, **kwargs)
+
+class InvoiceItemData(models.Model):
+    """Model to store individual invoice items separately"""
+    
+    # === FOREIGN KEY REFERENCE ===
+    invoice_data = models.ForeignKey(
+        InvoiceData,
+        on_delete=models.CASCADE,
+        related_name='invoice_items',
+        verbose_name="Invoice Data"
+    )
+    
+    # === ITEM DETAILS ===
+    item_description = models.CharField(
+        max_length=1000,
+        verbose_name="Item Description"
+    )
+    
+    hsn_code = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name="HSN Code"
+    )
+    
+    quantity = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.0000'))],
+        verbose_name="Quantity"
+    )
+    
+    unit_of_measurement = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name="Unit of Measurement"
+    )
+    
+    unit_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.0000'))],
+        verbose_name="Unit Price"
+    )
+    
+    invoice_value_item_wise = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name="Item-wise Invoice Value"
+    )
+    
+    # === TAX DETAILS ===
+    cgst_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="CGST Rate"
+    )
+    
+    cgst_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name="CGST Amount"
+    )
+    
+    sgst_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="SGST Rate"
+    )
+    
+    sgst_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name="SGST Amount"
+    )
+    
+    igst_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="IGST Rate"
+    )
+    
+    igst_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name="IGST Amount"
+    )
+    
+    total_tax_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name="Total Tax Amount"
+    )
+    
+    item_total_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name="Item Total Amount"
+    )
+    
+    # === REFERENCE FIELDS ===
+    po_number = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        db_index=True,
+        verbose_name="PO Number"
+    )
+    
+    invoice_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        db_index=True,
+        verbose_name="Invoice Number"
+    )
+    
+    vendor_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Vendor Name"
+    )
+    
+    item_sequence = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Item Sequence"
+    )
+    
+    # === TIMESTAMPS ===
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
+    
+    class Meta:
+        db_table = 'invoice_item_data'
+        verbose_name = "Invoice Item Data"
+        verbose_name_plural = "Invoice Items Data"
+        ordering = ['invoice_data', 'item_sequence']
+        indexes = [
+            models.Index(fields=['po_number']),
+            models.Index(fields=['invoice_number']),
+            models.Index(fields=['hsn_code']),
+            models.Index(fields=['vendor_name']),
+            models.Index(fields=['invoice_data', 'item_sequence']),
+        ]
+    
+    def __str__(self):
+        return f"Item {self.item_sequence}: {self.item_description[:50]} - Invoice {self.invoice_number}"
+    
+    @property
+    def calculated_total_tax(self):
+        """Calculate total tax from individual tax components"""
+        total = Decimal('0.00')
+        if self.cgst_amount:
+            total += self.cgst_amount
+        if self.sgst_amount:
+            total += self.sgst_amount
+        if self.igst_amount:
+            total += self.igst_amount
+        return total if total > 0 else None
