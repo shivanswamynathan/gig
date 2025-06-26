@@ -39,31 +39,64 @@ class InvoicePDFProcessor:
         
         # Define the invoice schema
         self.invoice_schema = {
-            "vendor_name": "",
-            "vendor_pan": "",
-            "vendor_gst": "",
-            "invoice_date": "",
-            "invoice_number": "",
-            "items": [
+            "vendor_details": {
+                "vendor_name": "",
+                "vendor_gst": "",
+                "vendor_pan": ""
+            },
+            "invoice_info": {
+                "invoice_number": "",
+                "invoice_date": ""
+            },
+            "line_items": [
                 {
-                    "description": "",
-                    "hsn_code": "",
+                    "sr_no": "",
+                    "item_description": "",
+                    "hsn_sac_code": "",
                     "quantity": "",
-                    "unit_of_measurement": "",
-                    "invoice_value_item_wise": ""
+                    "unit": "",
+                    "rate_per_unit": "",
+                    "gross_amount": "",
+                    "discount_amount": "",
+                    "taxable_amount": "",
+                    "gst_rate_percent": "",
+                    "cgst_rate": "",
+                    "cgst_amount": "",
+                    "sgst_rate": "",
+                    "sgst_amount": "",
+                    "igst_rate": "",
+                    "igst_amount": "",
+                    "total_gst_on_item": "",
+                    "final_amount_including_gst": ""
                 }
             ],
-            "invoice_value_without_gst": "",
-            "gst_details": {
-                "cgst_rate": "",
-                "cgst_amount": "",
-                "sgst_rate": "",
-                "sgst_amount": "",
-                "igst_rate": "",
-                "igst_amount": "",
-                "total_gst_amount": ""
-            },
-            "invoice_total_post_gst": ""
+            "tax_summary_by_hsn": [
+                {
+                    "hsn_sac_code": "",
+                    "taxable_amount": "",
+                    "cgst_rate": "",
+                    "cgst_amount": "",
+                    "sgst_rate": "",
+                    "sgst_amount": "",
+                    "igst_rate": "",
+                    "igst_amount": "",
+                    "total_tax_amount": ""
+                }
+            ],
+            "invoice_totals": {
+                "total_items": "",
+                "total_quantity": "",
+                "gross_total_before_discount": "",
+                "total_discount": "",
+                "total_taxable_amount": "",
+                "total_cgst": "",
+                "total_sgst": "",
+                "total_igst": "",
+                "total_gst": "",
+                "subtotal": "",
+                "round_off": "",
+                "final_invoice_amount": ""
+            }
         }
     
     def count_tokens(self, text: str) -> int:
@@ -143,12 +176,68 @@ EXTRACTION RULES:
 4. For dates, use DD/MM/YYYY or DD-MM-YYYY format
 5. For GST numbers, extract the complete 15-digit alphanumeric code
 6. For PAN numbers, extract the 10-character alphanumeric code
-7. For items array, include ALL line items found in the invoice
+7. For each line item, extract ALL GST details including rates and amounts
 8. For GST details, extract CGST, SGST, IGST rates and amounts as provided in the invoice. If specific breakup is not available, use empty strings.
 9. Unit of measurement should be units like KG, PCS, NOS, LTR, etc.
 10. HSN codes should be extracted for each item - HSN codes can be 4, 6, or 8 digits. Extract the FULL HSN code as shown in the invoice.
-11. Be precise and accurate - double-check all extracted values
-12. Return ONLY the JSON object, no additional text
+11.Extract the Tax Summary section data into tax_summary_by_hsn array
+12. Be precise and accurate - double-check all extracted values
+13. Return ONLY the JSON object, no additional text
+
+SPECIFIC EXTRACTION GUIDELINES:
+
+VENDOR DETAILS:
+- vendor_name: Extract company/business name from header
+- vendor_gst: Extract 15-digit GSTIN (format: ##AAAAA####A#A)
+- vendor_pan: Extract 10-character PAN (if not shown, derive from positions 3-12 of GST number)
+
+INVOICE INFO:
+- invoice_number: Extract invoice/bill number
+- invoice_date: Extract invoice date in DD/MM/YYYY format
+
+LINE ITEMS:
+For each product/service line:
+- sr_no: Serial number from invoice
+- item_description: Full product/service description
+- hsn_sac_code: HSN or SAC code for the item
+- quantity: Numeric quantity
+- unit: Unit of measurement (PCS, KG, LTR, etc.)
+- rate_per_unit: Rate per unit before tax
+- gross_amount: Quantity × Rate (before discount)
+- discount_amount: Discount amount (if any)
+- taxable_amount: Amount on which GST is calculated
+- gst_rate_percent: Total GST rate (CGST + SGST + IGST)
+- cgst_rate: CGST rate percentage
+- cgst_amount: CGST amount in rupees
+- sgst_rate: SGST rate percentage  
+- sgst_amount: SGST amount in rupees
+- igst_rate: IGST rate percentage
+- igst_amount: IGST amount in rupees
+- total_gst_on_item: Total GST for this item
+- final_amount_including_gst: Final amount including all taxes
+
+TAX SUMMARY BY HSN:
+Extract the "Tax Summary" table data:
+- hsn_sac_code: HSN/SAC code (may be blank for some rows)
+- taxable_amount: Taxable amount for this HSN
+- cgst_rate & cgst_amount: CGST rate and amount
+- sgst_rate & sgst_amount: SGST rate and amount  
+- igst_rate & igst_amount: IGST rate and amount
+- total_tax_amount: Total tax for this HSN
+
+INVOICE TOTALS:
+- total_items: Count of different line items
+- total_quantity: Sum of all quantities
+- gross_total_before_discount: Total before any discounts
+- total_discount: Total discount amount
+- total_taxable_amount: Total taxable amount
+- total_cgst: Total CGST amount
+- total_sgst: Total SGST amount
+- total_igst: Total IGST amount
+- total_gst: Total GST amount
+- subtotal: Amount before round-off
+- round_off: Round-off amount
+- final_invoice_amount: Final invoice amount
 
 REQUIRED JSON STRUCTURE:
 {schema}
@@ -189,23 +278,45 @@ Extract the information and return the JSON object:
             # Validate structure against schema
             validated_data = self.invoice_schema.copy()
             
-            # Update validated_data with extracted_data, preserving structure
-            for key, value in extracted_data.items():
-                if key in validated_data:
-                    if isinstance(validated_data[key], dict) and isinstance(value, dict):
-                        # For nested dictionaries, update individual keys
-                        for sub_key, sub_value in value.items():
-                            if sub_key in validated_data[key]:
-                                validated_data[key][sub_key] = sub_value
+            def deep_merge(target, source):
+                for key, value in source.items():
+                    if key in target:
+                        if isinstance(target[key], dict) and isinstance(value, dict):
+                            deep_merge(target[key], value)
+                        elif isinstance(target[key], list) and isinstance(value, list):
+                            # For arrays, use the extracted data
+                            target[key] = value
+                        else:
+                            target[key] = value
                     else:
-                        validated_data[key] = value
+                        # For unknown fields, still include them
+                        target[key] = value
+            
+            deep_merge(validated_data, extracted_data)
             
             # Auto-extract PAN from GST if PAN is not provided
-            if validated_data.get("vendor_gst") and not validated_data.get("vendor_pan"):
-                extracted_pan = self.extract_pan_from_gst(validated_data["vendor_gst"])
+            vendor_gst = validated_data.get("vendor_details", {}).get("vendor_gst", "")
+            vendor_pan = validated_data.get("vendor_details", {}).get("vendor_pan", "")
+            
+            if vendor_gst and not vendor_pan:
+                extracted_pan = self.extract_pan_from_gst(vendor_gst)
                 if extracted_pan:
-                    validated_data["vendor_pan"] = extracted_pan
+                    validated_data["vendor_details"]["vendor_pan"] = extracted_pan
                     logger.info(f"Extracted PAN {extracted_pan} from GST number")
+            
+            # Validate and log line items structure
+            line_items = validated_data.get("line_items", [])
+            if isinstance(line_items, list):
+                for i, item in enumerate(line_items):
+                    if isinstance(item, dict):
+                        item_desc = item.get('item_description', 'Unknown')
+                        total_gst = item.get('total_gst_on_item', 'Not specified')
+                        logger.info(f"Item {i+1}: {item_desc} - Total GST: {total_gst}")
+            
+            # Log tax summary extraction
+            tax_summary = validated_data.get("tax_summary_by_hsn", [])
+            if isinstance(tax_summary, list):
+                logger.info(f"Extracted {len(tax_summary)} HSN-wise tax summary entries")
             
             return validated_data
             
@@ -280,8 +391,18 @@ Extract the information and return the JSON object:
                 }
             }
             
+            # Log summary of extracted data
+            line_items = extracted_data.get("line_items", [])
+            tax_summary = extracted_data.get("tax_summary_by_hsn", [])
+            vendor_name = extracted_data.get("vendor_details", {}).get("vendor_name", "Unknown")
+            invoice_number = extracted_data.get("invoice_info", {}).get("invoice_number", "Unknown")
+            final_amount = extracted_data.get("invoice_totals", {}).get("final_invoice_amount", "Unknown")
+            
             logger.info(f"Successfully processed invoice: {uploaded_file.name}")
+            logger.info(f"Vendor: {vendor_name}, Invoice: {invoice_number}, Amount: ₹{final_amount}")
+            logger.info(f"Extracted {len(line_items)} line items and {len(tax_summary)} HSN tax entries")
             logger.info(f"Token usage - Input: {input_tokens}, Output: {output_tokens}, Total: {total_tokens}")
+            
             return extracted_data
             
         except Exception as e:
@@ -295,6 +416,7 @@ Extract the information and return the JSON object:
                 "processed_at": datetime.now().isoformat(),
                 "processing_status": "failed",
                 "error_message": str(e),
+                "schema_version": "3.0_optimized_gst",
                 "token_usage": {
                     "input_tokens": 0,
                     "output_tokens": 0,
@@ -303,6 +425,10 @@ Extract the information and return the JSON object:
             }
             
             raise Exception(f"Failed to process invoice: {str(e)}")
+        finally:
+            # Clean up temporary file
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
             
         
     
@@ -354,6 +480,7 @@ Extract the information and return the JSON object:
                 "model_used": self.model_name,
                 "text_length": len(extracted_text),
                 "processing_status": "success",
+                "schema_version": "3.0_optimized_gst",
                 "token_usage": {
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
@@ -361,8 +488,18 @@ Extract the information and return the JSON object:
                 }
             }
             
+            # Log summary of extracted data
+            line_items = extracted_data.get("line_items", [])
+            tax_summary = extracted_data.get("tax_summary_by_hsn", [])
+            vendor_name = extracted_data.get("vendor_details", {}).get("vendor_name", "Unknown")
+            invoice_number = extracted_data.get("invoice_info", {}).get("invoice_number", "Unknown")
+            final_amount = extracted_data.get("invoice_totals", {}).get("final_invoice_amount", "Unknown")
+            
             logger.info(f"Successfully processed invoice from: {file_path}")
+            logger.info(f"Vendor: {vendor_name}, Invoice: {invoice_number}, Amount: ₹{final_amount}")
+            logger.info(f"Extracted {len(line_items)} line items and {len(tax_summary)} HSN tax entries")
             logger.info(f"Token usage - Input: {input_tokens}, Output: {output_tokens}, Total: {total_tokens}")
+            
             return extracted_data
             
         except Exception as e:
