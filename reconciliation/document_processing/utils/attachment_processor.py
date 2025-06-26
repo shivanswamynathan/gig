@@ -5,9 +5,10 @@ from django.db import transaction
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
-from document_processing.models import ItemWiseGrn, InvoiceData
+from document_processing.models import ItemWiseGrn, InvoiceData , InvoiceItemData
 from document_processing.utils.file_classifier import SmartFileClassifier
 from document_processing.utils.processors.invoice_processors.invoice_pdf_processor import InvoicePDFProcessor
+
 
 logger = logging.getLogger(__name__)
 
@@ -410,20 +411,104 @@ class SimplifiedAttachmentProcessor:
             for field, value in financial_fields.items():
                 if value:
                     try:
-                        clean_value = str(value).replace(',', '').replace('₹', '').strip()
+                        clean_value = str(value).replace(',', '').replace('₹', '').replace('%', '').strip()
                         if clean_value:
                             setattr(invoice_data, field, Decimal(clean_value))
                     except (InvalidOperation, ValueError):
                         logger.warning(f"Could not parse {field}: {value}")
             
-            # Store items as JSON
-            items = extracted_data.get('items', [])
-            if items:
-                invoice_data.items_data = items
+
             
             invoice_data.save()
+
+            items = extracted_data.get('items', [])
+            if items:
+                self._create_invoice_items(invoice_data, items, attachment_info)
+
             logger.info(f"Saved invoice data for PO {attachment_info['po_number']}, attachment {attachment_info['attachment_number']}")
             return invoice_data
+    
+    def _create_invoice_items(self, invoice_data: InvoiceData, items: List[Dict[str, Any]], attachment_info: Dict[str, Any]):
+        """
+        Create separate InvoiceItemData records for each item
+        """
+        try:
+            items_to_create = []
+            
+            for idx, item in enumerate(items, 1):
+                item_record = InvoiceItemData(
+                    invoice_data=invoice_data,
+                    item_description=item.get('description', ''),
+                    hsn_code=item.get('hsn_code', ''),
+                    unit_of_measurement=item.get('unit_of_measurement', ''),
+                    item_sequence=idx,
+                    
+                    # Reference fields for easy querying
+                    po_number=attachment_info['po_number'],
+                    invoice_number=invoice_data.invoice_number,
+                    vendor_name=invoice_data.vendor_name
+                )
+                
+                # Parse quantity
+                quantity_str = item.get('quantity', '')
+                if quantity_str:
+                    try:
+                        clean_qty = str(quantity_str).replace(',', '').strip()
+                        if clean_qty:
+                            item_record.quantity = Decimal(clean_qty)
+                    except (InvalidOperation, ValueError):
+                        logger.warning(f"Could not parse quantity: {quantity_str}")
+                
+                # Parse unit price (if available in item data)
+                unit_price_str = item.get('unit_price', '')
+                if unit_price_str:
+                    try:
+                        clean_price = str(unit_price_str).replace(',', '').replace('₹', '').strip()
+                        if clean_price:
+                            item_record.unit_price = Decimal(clean_price)
+                    except (InvalidOperation, ValueError):
+                        logger.warning(f"Could not parse unit price: {unit_price_str}")
+                
+                # Parse item-wise invoice value
+                item_value_str = item.get('invoice_value_item_wise', '')
+                if item_value_str:
+                    try:
+                        clean_value = str(item_value_str).replace(',', '').replace('₹', '').strip()
+                        if clean_value:
+                            item_record.invoice_value_item_wise = Decimal(clean_value)
+                    except (InvalidOperation, ValueError):
+                        logger.warning(f"Could not parse item value: {item_value_str}")
+                
+                # Parse tax details if available in item
+                tax_fields = {
+                    'cgst_rate': item.get('cgst_rate'),
+                    'cgst_amount': item.get('cgst_amount'),
+                    'sgst_rate': item.get('sgst_rate'),
+                    'sgst_amount': item.get('sgst_amount'),
+                    'igst_rate': item.get('igst_rate'),
+                    'igst_amount': item.get('igst_amount'),
+                    'total_tax_amount': item.get('total_tax_amount'),
+                    'item_total_amount': item.get('item_total_amount')
+                }
+                
+                for field, value in tax_fields.items():
+                    if value:
+                        try:
+                            clean_value = str(value).replace(',', '').replace('₹', '').strip()
+                            if clean_value:
+                                setattr(item_record, field, Decimal(clean_value))
+                        except (InvalidOperation, ValueError):
+                            logger.warning(f"Could not parse {field} for item {idx}: {value}")
+                
+                items_to_create.append(item_record)
+            
+            # Bulk create all items
+            if items_to_create:
+                InvoiceItemData.objects.bulk_create(items_to_create)
+                logger.info(f"Created {len(items_to_create)} item records for invoice {invoice_data.invoice_number}")
+        
+        except Exception as e:
+            logger.error(f"Error creating invoice items: {str(e)}")
     
     def _save_error_record_direct(self, attachment_info: Dict[str, Any], error_message: str, file_type: str, original_extension: str):
         """Save error record when processing fails (direct mode)"""
@@ -641,18 +726,25 @@ class SimplifiedAttachmentProcessor:
             for field, value in financial_fields.items():
                 if value:
                     try:
-                        clean_value = str(value).replace(',', '').replace('₹', '').strip()
+                        clean_value = str(value).replace(',', '').replace('₹', '').replace('%', '').strip()
                         if clean_value:
                             setattr(invoice_data, field, Decimal(clean_value))
                     except (InvalidOperation, ValueError):
                         logger.warning(f"Could not parse {field}: {value}")
             
-            # Store items as JSON
-            items = extracted_data.get('items', [])
-            if items:
-                invoice_data.items_data = items
             
             invoice_data.save()
+
+            items = extracted_data.get('items', [])
+            if items:
+                # Create attachment info for the item creation method
+                attachment_info = {
+                    'po_number': grn_record.po_no,
+                    'grn_number': grn_record.grn_no,
+                    'supplier': grn_record.supplier,
+                    'attachment_number': int(attachment_number)
+                }
+                self._create_invoice_items(invoice_data, items, attachment_info)
             logger.info(f"Saved invoice data for GRN {grn_record.id}, attachment {attachment_number}")
             return invoice_data
     
